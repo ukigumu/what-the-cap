@@ -2,13 +2,13 @@
 
 Native macOS menu-bar app that counts keystrokes. Counts only. Never stores typed text.
 
-This branch is the design build: a runnable SwiftUI app in which every screen renders deterministic mock data. The capture engine (CGEvent tap, Accessibility integration, persistence) is not implemented yet; the UI is designed so it can be wired in behind one protocol.
+Runnable SwiftUI Mac app. The UI from the design pass is unchanged. This pass wires the real engine behind `KeystrokeStore` and `CaptureState`.
 
 ## Run it
 
-Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens the main window, puts a live count in the menu bar, and shows onboarding on first launch. Requires macOS 14.
+Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens the main window, puts today's count in the menu bar, and shows Accessibility onboarding on first launch. Requires macOS 14. Grant Accessibility, then type. Counts land in `~/Library/Application Support/WhatTheCap/counts.sqlite`.
 
-`./verify.sh` builds the app on macOS and runs the domain checks (layout widths, seeded-data determinism, CSV shape, reset behavior). On Linux it runs the domain checks alone, since SwiftUI needs macOS.
+`./verify.sh` builds the app on macOS and runs the domain plus SQLite checks. On Linux it runs those checks alone. SwiftUI, the CGEvent tap, Accessibility, and login items need a Mac.
 
 ## The privacy contract the UI is built around
 
@@ -41,9 +41,14 @@ More in `design/screenshots/`: 7-day range, both remaining onboarding steps, emp
 
 A counting app drawn like a counting-house ledger. Warm obsidian ground, bone ink, one ember accent, oversized serif numerals (New York via `fontDesign(.serif)`, so nothing is bundled), SF Mono key legends, hairline rules. The heatmap ramps from cold keycap through ember to near-white. Motion is numeric-text transitions on totals, spring bars, and staggered reveals.
 
-## Where the real engine plugs in
+## Engine
 
-- `KeystrokeStore` (in `WhatTheCap/Mock/MockKeystrokeStore.swift`) is the whole read surface the UI uses. Implement it against the event tap and persistence, then swap it in `AppModel`.
-- `CaptureState` is the state machine the tap drives: `active`, `pausedByUser`, `secureInput`, `permissionDenied`. Every banner, blocked screen, and menu bar glyph derives from it.
-- The ticker in `AppModel` fakes the live menu-bar count and gets deleted with the swap.
-- Settings has a "Design demo" card for flipping states and restoring mock data; it goes away with the real engine.
+- `EventTap` is a listen-only `CGEvent` session tap for key-down and modifier-down. It never swallows events, never reads unicode, and never touches the clipboard. Key repeat is ignored.
+- Secure input is checked in the callback. If a password field is focused, the tap records nothing and `CaptureState` becomes `secureInput`.
+- Accessibility trust is polled. Untrusted means `permissionDenied`, the tap is down, and the permission screen is shown. Onboarding calls `AXIsProcessTrustedWithOptions`.
+- `PersistentStore` implements `KeystrokeStore`. The SQLite file has one table, `counts (day, hour, key_code, bundle_id, count)`. Increments only. No event log, so a sequence cannot be replayed.
+- Per-app rows store the frontmost bundle identifier from `NSWorkspace`. No window titles.
+- Launch at login uses `SMAppService.mainApp`.
+- Settings still has a Design demo card. It overrides the displayed state only. Live capture keeps following trust, pause, and secure input.
+
+`MockKeystrokeStore` remains for `verify.sh` and for Restore mock data, which writes the seeded dataset into the same SQLite file.
