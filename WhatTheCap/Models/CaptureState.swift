@@ -2,8 +2,8 @@ import Foundation
 
 /// The single source of truth for whether WTC is counting.
 /// Every banner, empty state, and menu-bar glyph derives from this machine.
-/// The real event tap will drive transitions later; the design build sets it
-/// directly from the demo controls in Settings.
+/// Live inputs resolve in this order: no Accessibility trust, user pause,
+/// secure input, then active.
 enum CaptureState: String, CaseIterable, Identifiable, Codable {
     case active
     case pausedByUser
@@ -46,5 +46,14 @@ enum CaptureState: String, CaseIterable, Identifiable, Codable {
         case .permissionDenied:
             "WTC needs the Accessibility permission to count keystrokes."
         }
+    }
+
+    /// Trust outranks pause, pause outranks secure input. The event tap
+    /// records only when the result is `active`.
+    static func resolved(trusted: Bool, paused: Bool, secure: Bool) -> CaptureState {
+        if !trusted { return .permissionDenied }
+        if paused { return .pausedByUser }
+        if secure { return .secureInput }
+        return .active
     }
 }

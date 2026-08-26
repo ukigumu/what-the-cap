@@ -1,33 +1,6 @@
 import Foundation
 import Observation
 
-/// The boundary Grok wires the real, CGEvent-tap-backed store into later.
-/// Every view reads counts through this protocol and nothing else.
-protocol KeystrokeStore: AnyObject, Observable {
-    var todayTotal: Int { get }
-    var hasData: Bool { get }
-
-    func total(for range: StatsRange) -> Int
-    func previousTotal(for range: StatsRange) -> Int
-    func bars(for range: StatsRange) -> [BarSample]
-    func keyCounts(for range: StatsRange) -> [UInt16: Int]
-    func topKeys(for range: StatsRange, limit: Int) -> [KeyCount]
-    func appCounts(for range: StatsRange) -> [AppCount]
-    func csv(for range: StatsRange) -> String
-
-    func recordLiveTick()
-    func reset()
-}
-
-/// One bar in the dashboard chart. Hours for Today, days for 7 and 30 days.
-struct BarSample: Identifiable, Hashable {
-    let label: String
-    let value: Int
-    let isCurrent: Bool
-
-    var id: String { label }
-}
-
 /// Deterministic mock data: a fixed seed drives day totals with a weekday
 /// rhythm, per-key counts with Spanish letter frequencies, and per-app counts
 /// over realistic bundle identifiers. Counts only. No typed text exists
@@ -91,14 +64,6 @@ final class MockKeystrokeStore: KeystrokeStore {
         }
     }
 
-    func topKeys(for range: StatsRange, limit: Int) -> [KeyCount] {
-        keyCounts(for: range)
-            .map { KeyCount(keyCode: $0.key, count: $0.value) }
-            .sorted { $0.count > $1.count }
-            .prefix(limit)
-            .map { $0 }
-    }
-
     func appCounts(for range: StatsRange) -> [AppCount] {
         days.suffix(range.dayCount)
             .reduce(into: [:]) { acc, day in acc.merge(day.apps, uniquingKeysWith: +) }
@@ -106,19 +71,65 @@ final class MockKeystrokeStore: KeystrokeStore {
             .sorted { $0.count > $1.count }
     }
 
-    func csv(for range: StatsRange) -> String {
-        var lines = ["key_code,legend,count"]
-        let counts = keyCounts(for: range).sorted { $0.value > $1.value }
-        for (code, count) in counts {
-            let legend = (code == 49 ? "space" : KeyboardLayout.isoSpanish.legend(for: code))
-                .replacingOccurrences(of: "\"", with: "\"\"")
-            lines.append("\(code),\"\(legend)\",\(count)")
+    func record(_ event: KeyDown) {
+        liveExtra += 1
+        guard var last = days.last else { return }
+        last.total += 1
+        last.keys[event.keyCode, default: 0] += 1
+        last.apps[event.bundleID, default: 0] += 1
+        days[days.count - 1] = last
+        let hour = calendar.component(.hour, from: event.at)
+        if todayHourly.indices.contains(hour) {
+            todayHourly[hour] += 1
         }
-        return lines.joined(separator: "\n") + "\n"
+        wasReset = false
     }
 
-    func recordLiveTick() {
-        liveExtra += Int.random(in: 1...4)
+    /// Used by PersistentStore.restoreDemoData to seed the same dataset.
+    func seedRows() -> [CountSeed] {
+        var rows: [CountSeed] = []
+        for (index, day) in days.enumerated() {
+            let isToday = index == days.count - 1
+            if isToday {
+                let hourTotal = max(todayHourly.reduce(0, +), 1)
+                for (hour, hourCount) in todayHourly.enumerated() where hourCount > 0 {
+                    let factor = Double(hourCount) / Double(hourTotal)
+                    let hourKeys = day.keys.mapValues { Int(Double($0) * factor) }
+                    rows.append(contentsOf: Self.split(hourKeys, across: day.apps, day: day.date, hour: hour))
+                }
+            } else {
+                rows.append(contentsOf: Self.split(day.keys, across: day.apps, day: day.date, hour: 12))
+            }
+        }
+        return rows
+    }
+
+    private static func split(
+        _ keys: [UInt16: Int],
+        across apps: [String: Int],
+        day: Date,
+        hour: Int
+    ) -> [CountSeed] {
+        let appTotal = apps.values.reduce(0, +)
+        let bundles = apps.keys.sorted()
+        var rows: [CountSeed] = []
+        for (code, count) in keys where count > 0 {
+            if appTotal == 0 || bundles.isEmpty {
+                rows.append(CountSeed(day: day, hour: hour, keyCode: code, bundleID: "unknown", count: count))
+                continue
+            }
+            var remaining = count
+            for (index, bundle) in bundles.enumerated() {
+                let share = index == bundles.count - 1
+                    ? remaining
+                    : count * (apps[bundle] ?? 0) / appTotal
+                remaining -= share
+                if share > 0 {
+                    rows.append(CountSeed(day: day, hour: hour, keyCode: code, bundleID: bundle, count: share))
+                }
+            }
+        }
+        return rows
     }
 
     func reset() {
