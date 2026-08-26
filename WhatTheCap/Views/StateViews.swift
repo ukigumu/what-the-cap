@@ -33,10 +33,7 @@ struct PermissionDeniedView: View {
         ) {
             HStack(spacing: 10) {
                 Button("Open System Settings") {
-                    let pane = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-                    if let url = URL(string: pane) {
-                        NSWorkspace.shared.open(url)
-                    }
+                    model.openAccessibilitySettings()
                 }
                 .buttonStyle(EmberButtonStyle())
                 Button("Run onboarding") {

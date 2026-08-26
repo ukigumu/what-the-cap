@@ -40,7 +40,7 @@ struct OnboardingView: View {
                 Button(step == stepCount - 1 ? "Start counting" : "Continue") {
                     withAnimation(Theme.spring) {
                         if step == stepCount - 1 {
-                            model.hasCompletedOnboarding = true
+                            model.finishOnboarding()
                         } else {
                             step += 1
                         }
@@ -125,6 +125,8 @@ private struct PrivacyStep: View {
 }
 
 private struct PermissionStep: View {
+    @Environment(AppModel.self) private var model
+
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             SectionLabel("One permission")
@@ -149,18 +151,17 @@ private struct PermissionStep: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.inkFaint)
                     Button("Open System Settings") {
-                        let pane = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-                        if let url = URL(string: pane) {
-                            NSWorkspace.shared.open(url)
-                        }
+                        model.openAccessibilitySettings()
                     }
                     .buttonStyle(EmberButtonStyle())
                 }
             }
 
             HStack(spacing: 8) {
-                Circle().fill(Theme.ember).frame(width: 6, height: 6)
-                Text("Waiting for permission · mock status in the design build")
+                Circle()
+                    .fill(model.isTrusted ? Theme.ember : Theme.inkDim)
+                    .frame(width: 6, height: 6)
+                Text(model.isTrusted ? "Accessibility is on" : "Waiting for permission")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(Theme.inkDim)
             }

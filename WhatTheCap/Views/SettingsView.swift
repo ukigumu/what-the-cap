@@ -89,11 +89,14 @@ struct SettingsView: View {
                 LedgerCard {
                     VStack(alignment: .leading, spacing: 18) {
                         SectionLabel("Design demo")
-                        Text("This build renders mock data so every state is reachable. The controls below exist only in the design build.")
+                        Text("Preview banners without changing live capture. Restore writes the seeded dataset into the local count file.")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.inkFaint)
                         SettingRow(title: "Capture state", detail: "Preview banners and blocked states.") {
-                            Picker("", selection: $model.captureState.animation(Theme.spring)) {
+                            Picker("", selection: Binding(
+                                get: { model.captureState },
+                                set: { model.setDemoOverride($0) }
+                            ).animation(Theme.spring)) {
                                 ForEach(CaptureState.allCases) { state in
                                     Text(state.label).tag(state)
                                 }
