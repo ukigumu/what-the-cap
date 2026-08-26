@@ -22,7 +22,7 @@ Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens th
 
 ## Screens
 
-Images below are design renders: the HTML preview in `design/preview/` uses the app's own mock dataset (exported by `design/preview/generate.sh` from the Swift domain code) and the same design tokens as `Theme.swift`. They are not macOS screenshots; this repo's CI box is Linux. Fonts stand in for macOS: Lora for New York, Inter for SF Pro, JetBrains Mono for SF Mono.
+Images below are design renders: the HTML preview in `design/preview/` uses the app's own mock dataset (exported by `design/preview/generate.sh` from the Swift domain code) and the same design tokens as `Theme.swift`. They are not macOS screenshots; this repo's CI box is Linux. Fonts stand in for macOS: Inter for SF Pro, JetBrains Mono for SF Mono.
 
 | Screen | Render |
 | --- | --- |
@@ -41,7 +41,7 @@ More in `design/screenshots/`: 7-day range, both remaining onboarding steps, emp
 
 ## Design language
 
-A counting app drawn like a counting-house ledger. Warm obsidian ground, bone ink, one ember accent, oversized serif numerals (New York via `fontDesign(.serif)`, so nothing is bundled), SF Mono key legends, hairline rules. The heatmap ramps from cold keycap through ember to near-white. Motion is numeric-text transitions on totals, spring bars, and staggered reveals.
+Linear-style product language, anchored on the app icon. Flat navy ground (RGB 22, 24, 36), cream ink and rounded cream bars, and one amber accent that marks only the hottest value in any chart. Geometric sans throughout (SF Pro, nothing bundled), mono reserved for key codes and bundle identifiers, hairline rules, no glow. The heatmap ramps from navy keycap through cream, and the single hottest key turns amber. The app icon repeats the system: three cream bars and one amber square on the same navy. Motion is numeric-text transitions on totals, spring bars, and staggered reveals.
 
 ## Engine
 

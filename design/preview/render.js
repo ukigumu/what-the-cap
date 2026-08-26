@@ -32,25 +32,15 @@ function html(tag, cls, inner) {
 	return node;
 }
 
-// Mirrors Theme.heat: keycap -> ember-deep -> ember -> near-white.
+// Mirrors Theme.heat: navy keycap through cream, amber only at the very top
+// of the ramp so the single hottest value carries the accent.
 function heatColor(t) {
-	const stops = [
-		[0.0, [0x1a, 0x17, 0x12]],
-		[0.5, [0xb4, 0x65, 0x1b]],
-		[0.85, [0xf2, 0xa3, 0x3c]],
-		[1.0, [0xff, 0xe3, 0xb8]],
-	];
 	t = Math.min(Math.max(t, 0), 1);
-	for (let i = 1; i < stops.length; i++) {
-		if (t <= stops[i][0]) {
-			const [t0, a] = stops[i - 1];
-			const [t1, b] = stops[i];
-			const k = (t - t0) / (t1 - t0);
-			const mix = a.map((v, j) => Math.round(v + (b[j] - v) * k));
-			return `rgb(${mix.join(",")})`;
-		}
-	}
-	return "rgb(255,227,184)";
+	if (t >= 0.999) return "rgb(236,166,38)";
+	const navy = [0x21, 0x24, 0x36];
+	const cream = [0xf7, 0xf3, 0xea];
+	const mix = navy.map((v, i) => Math.round(v + (cream[i] - v) * t));
+	return `rgb(${mix.join(",")})`;
 }
 
 const icons = {
@@ -67,7 +57,7 @@ const icons = {
 };
 
 const stateMeta = {
-	pausedByUser: { label: "Paused", detail: "You paused counting. Nothing is recorded until you resume.", tone: "ember", icon: icons.pause },
+	pausedByUser: { label: "Paused", detail: "You paused counting. Nothing is recorded until you resume.", tone: "amber", icon: icons.pause },
 	secureInput: { label: "Secure input", detail: "A password field has secure input enabled. WTC pauses itself and records nothing.", tone: "calm", icon: icons.shield },
 };
 
@@ -78,10 +68,7 @@ function buildWindow(selectedScreen, captureState) {
 	win.appendChild(html("div", "traffic", "<span></span><span></span><span></span>"));
 
 	const rail = el("div", "rail");
-	const mark = el("div", "wordmark");
-	mark.appendChild(el("div", "big", "WTC"));
-	mark.appendChild(el("div", "small", "WHAT THE CAP"));
-	rail.appendChild(mark);
+	rail.appendChild(wordmark());
 
 	const nav = el("div", "nav");
 	for (const [id, title] of [["overview", "Overview"], ["heatmap", "Heatmap"], ["apps", "Per app"], ["settings", "Settings"]]) {
@@ -138,20 +125,29 @@ function banner(tone, icon, title, detail, action) {
 	return b;
 }
 
+function wordmark() {
+	const mark = el("div", "wordmark");
+	const row = el("div", "row");
+	row.appendChild(el("div", "big", "WTC"));
+	row.appendChild(el("div", "sq"));
+	mark.appendChild(row);
+	mark.appendChild(el("div", "small", "WHAT THE CAP"));
+	return mark;
+}
+
 function keycap(legend, sub, heatT, control, w, h) {
 	const cap = el("div", "keycap" + (control ? " control" : ""));
 	cap.style.width = w + "px";
 	cap.style.height = h + "px";
-	if (heatT > 0.02) {
+	if (heatT > 0.05) {
 		cap.style.background = heatColor(heatT);
-		cap.style.borderColor = `rgba(242,163,60,${0.25 + 0.4 * heatT})`;
-		if (heatT > 0.3) cap.style.boxShadow = `0 0 7px rgba(242,163,60,${0.35 * heatT})`;
+		cap.style.borderColor = "transparent";
 	}
 	if (sub) cap.appendChild(el("span", "sub", sub));
 	const main = el("span", null, legend);
 	if (heatT > 0.55) {
-		main.style.color = "rgba(0,0,0,0.8)";
-		if (sub) cap.firstChild.style.color = "rgba(0,0,0,0.55)";
+		main.style.color = "#161824";
+		if (sub) cap.firstChild.style.color = "rgba(22,24,36,0.6)";
 	}
 	cap.appendChild(main);
 	return cap;
@@ -185,7 +181,7 @@ function renderOverview(content) {
 	const labelEvery = dense ? 5 : 1;
 	R.bars.forEach((b, i) => {
 		const col = el("div", "bar-col");
-		const bar = el("div", "bar" + (b.isCurrent ? " current" : ""));
+		const bar = el("div", "bar" + (b.value === peak ? " hot" : ""));
 		bar.style.height = Math.max(3, (b.value / peak) * 120) + "px";
 		col.appendChild(bar);
 		col.appendChild(el("div", "bar-label" + (b.isCurrent ? " current" : ""), i % labelEvery === 0 ? b.label : " "));
@@ -274,7 +270,7 @@ function renderApps(content) {
 	const total = R.apps.reduce((a, b) => a + b.count, 0);
 	R.apps.forEach((app, i) => {
 		const row = el("div", "app-row");
-		row.appendChild(el("div", "app-rank" + (i < 3 ? " top" : ""), String(i + 1)));
+		row.appendChild(el("div", "app-rank" + (i === 0 ? " top" : ""), String(i + 1)));
 		const main = el("div", "app-main");
 		const line = el("div", "app-line");
 		line.appendChild(el("span", "app-id", app.bundleID));
@@ -282,7 +278,7 @@ function renderApps(content) {
 		line.appendChild(el("span", "app-share", pct(app.count / total)));
 		main.appendChild(line);
 		const track = el("div", "app-bar-track");
-		const bar = el("div", "app-bar" + (i < 3 ? " top" : ""));
+		const bar = el("div", "app-bar" + (i === 0 ? " top" : ""));
 		bar.style.width = Math.max(0.5, (app.count / peak) * 100) + "%";
 		track.appendChild(bar);
 		main.appendChild(track);
@@ -398,17 +394,17 @@ function renderOnboarding(root) {
 
 	if (step === 0) {
 		const body = el("div", "sheet-body centered");
-		const mark = el("div", "wordmark");
+		const mark = wordmark();
 		mark.style.padding = "0";
-		mark.style.textAlign = "center";
-		mark.appendChild(el("div", "big", "WTC"));
-		mark.appendChild(el("div", "small", "WHAT THE CAP"));
+		mark.style.alignItems = "center";
+		mark.style.display = "flex";
+		mark.style.flexDirection = "column";
 		body.appendChild(mark);
 		body.appendChild(el("div", "ob-title", "Your keyboard, in numbers."));
 		body.appendChild(html("div", "ob-text", "WTC counts how often each key gets pressed.<br>It never records what you type."));
 		const caps = el("div", "top-keys");
 		caps.style.marginTop = "8px";
-		["H", "O", "L", "A"].forEach((ch, i) => caps.appendChild(keycap(ch, null, 0.25 + i * 0.22, false, 40, 40)));
+		["H", "O", "L", "A"].forEach((ch, i) => caps.appendChild(keycap(ch, null, 0.25 + i * 0.25, false, 40, 40)));
 		body.appendChild(caps);
 		sheet.appendChild(body);
 	} else if (step === 1) {
@@ -482,7 +478,9 @@ function renderMenubar(root) {
 	const dd = el("div", "dropdown");
 	const head = el("div", "dropdown-head");
 	const line = el("div", "rowline");
-	const mark = el("span", "mark", "WTC");
+	const mark = el("span", "mark");
+	mark.appendChild(el("span", null, "WTC"));
+	mark.appendChild(el("span", "sq"));
 	line.appendChild(mark);
 	const badge = el("div", "badge");
 	badge.style.paddingLeft = "0";
