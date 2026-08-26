@@ -17,11 +17,12 @@ fi
 echo "== domain and sqlite checks =="
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-sqlite_flags=()
 if [ "$(uname)" != "Darwin" ]; then
-	sqlite_flags=(-I verify/sqlite)
+	set -- -I verify/sqlite
+else
+	set --
 fi
-"$swiftc" "${sqlite_flags[@]}" -lsqlite3 -o "$tmp/checks" \
+"$swiftc" "$@" -lsqlite3 -o "$tmp/checks" \
 	WhatTheCap/Models/*.swift \
 	WhatTheCap/Mock/*.swift \
 	WhatTheCap/Store/*.swift \

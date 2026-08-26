@@ -1,13 +1,14 @@
 #if os(macOS)
 import AppKit
-import ApplicationServices
 import Carbon
+import CoreGraphics
 import ServiceManagement
 
 /// macOS facts the engine reads. Bundle id only. Never a window title.
 enum SystemState {
+    /// Listen-only `CGEvent` taps need Input Monitoring, not Accessibility.
     static var isTrusted: Bool {
-        AXIsProcessTrusted()
+        CGPreflightListenEventAccess()
     }
 
     static var isSecureInput: Bool {
@@ -18,14 +19,20 @@ enum SystemState {
         NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "unknown"
     }
 
-    static func promptTrust() {
-        let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
-        AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
+    @discardableResult
+    static func promptTrust() -> Bool {
+        CGRequestListenEventAccess()
     }
 
-    static func openAccessibilitySettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-            NSWorkspace.shared.open(url)
+    static func openInputMonitoringSettings() {
+        let candidates = [
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ListenEvent",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent",
+        ]
+        for candidate in candidates {
+            if let url = URL(string: candidate), NSWorkspace.shared.open(url) {
+                return
+            }
         }
     }
 }

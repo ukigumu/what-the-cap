@@ -116,22 +116,22 @@ final class AppModel {
         applyDisplay()
     }
 
-    func requestAccessibility() {
+    func requestInputMonitoring() {
         #if os(macOS)
         SystemState.promptTrust()
         #endif
         refreshLiveState()
     }
 
-    func openAccessibilitySettings() {
+    func openInputMonitoringSettings() {
         #if os(macOS)
-        SystemState.openAccessibilitySettings()
+        SystemState.openInputMonitoringSettings()
         #endif
     }
 
     func finishOnboarding() {
         hasCompletedOnboarding = true
-        requestAccessibility()
+        requestInputMonitoring()
     }
 
     // MARK: - Live state
@@ -159,12 +159,8 @@ final class AppModel {
         liveState = CaptureState.resolved(trusted: isTrusted, paused: pausedByUser, secure: secure)
         applyDisplay()
         #if os(macOS)
-        if liveState != .permissionDenied {
-            if tap.start() == false {
-                liveState = .permissionDenied
-                isTrusted = false
-                applyDisplay()
-            }
+        if isTrusted {
+            _ = tap.start()
         } else {
             tap.stop()
         }

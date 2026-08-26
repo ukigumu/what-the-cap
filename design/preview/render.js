@@ -382,8 +382,8 @@ function renderStatePage(content, kind) {
 		page.appendChild(actions);
 	} else {
 		page.appendChild(html("div", "state-glyph danger", icons.keyboardSlash));
-		page.appendChild(el("div", "state-title", "Accessibility permission needed"));
-		page.appendChild(el("div", "state-detail", "macOS blocks key-event observation until you grant Accessibility access. WTC is idle and counting nothing right now."));
+		page.appendChild(el("div", "state-title", "Input Monitoring needed"));
+		page.appendChild(el("div", "state-detail", "macOS blocks listen-only key-event taps until you grant Input Monitoring. WTC is idle and counting nothing right now."));
 		const actions = el("div", "state-actions");
 		actions.appendChild(el("span", "btn prominent", "Open System Settings"));
 		actions.appendChild(el("span", "btn", "Run onboarding"));
@@ -438,15 +438,15 @@ function renderOnboarding(root) {
 	} else {
 		const body = el("div", "sheet-body");
 		body.appendChild(el("div", "section-label", "One permission"));
-		const title = el("div", "ob-title", "Accessibility access");
+		const title = el("div", "ob-title", "Input Monitoring");
 		title.style.margin = "14px 0";
 		body.appendChild(title);
-		body.appendChild(el("div", "ob-text", "macOS only lets an app observe key-down events through the Accessibility permission. WTC uses it to increment one counter per key code, and for nothing else."));
+		body.appendChild(el("div", "ob-text", "macOS only lets an app observe key-down events through Input Monitoring. WTC uses it to increment one counter per key code, and for nothing else."));
 		const card = el("div", "card");
 		card.style.marginTop = "22px";
 		const path = el("div", "perm-path");
 		path.innerHTML = `<span style="width:16px;color:var(--ink-dim)">${icons.settings}</span>`;
-		path.appendChild(el("span", null, "System Settings › Privacy & Security › Accessibility"));
+		path.appendChild(el("span", null, "System Settings › Privacy & Security › Input Monitoring"));
 		card.appendChild(path);
 		card.appendChild(el("div", "perm-hint", "Toggle on What the cap, then come back here."));
 		card.appendChild(el("span", "btn prominent", "Open System Settings"));

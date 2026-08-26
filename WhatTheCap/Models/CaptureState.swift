@@ -2,7 +2,7 @@ import Foundation
 
 /// The single source of truth for whether WTC is counting.
 /// Every banner, empty state, and menu-bar glyph derives from this machine.
-/// Live inputs resolve in this order: no Accessibility trust, user pause,
+/// Live inputs resolve in this order: no Input Monitoring, user pause,
 /// secure input, then active.
 enum CaptureState: String, CaseIterable, Identifiable, Codable {
     case active
@@ -22,7 +22,7 @@ enum CaptureState: String, CaseIterable, Identifiable, Codable {
         case .active: "keyboard"
         case .pausedByUser: "pause.circle"
         case .secureInput: "lock.shield"
-        case .permissionDenied: "keyboard.slash"
+        case .permissionDenied: "keyboard.badge.ellipsis"
         }
     }
 
@@ -44,7 +44,7 @@ enum CaptureState: String, CaseIterable, Identifiable, Codable {
         case .secureInput:
             "A password field has secure input enabled. WTC pauses itself and records nothing."
         case .permissionDenied:
-            "WTC needs the Accessibility permission to count keystrokes."
+            "WTC needs Input Monitoring to count keystrokes."
         }
     }
 

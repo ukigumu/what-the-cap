@@ -26,14 +26,15 @@ struct PermissionDeniedView: View {
 
     var body: some View {
         StatePage(
-            symbol: "keyboard.slash",
-            title: "Accessibility permission needed",
-            detail: "macOS blocks key-event observation until you grant Accessibility access. WTC is idle and counting nothing right now.",
+            symbol: "keyboard.badge.ellipsis",
+            title: "Input Monitoring needed",
+            detail: "macOS blocks listen-only key-event taps until you grant Input Monitoring. WTC is idle and counting nothing right now.",
             tint: Theme.danger
         ) {
             HStack(spacing: 10) {
                 Button("Open System Settings") {
-                    model.openAccessibilitySettings()
+                    model.requestInputMonitoring()
+                    model.openInputMonitoringSettings()
                 }
                 .buttonStyle(EmberButtonStyle())
                 Button("Run onboarding") {

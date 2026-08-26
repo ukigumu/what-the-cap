@@ -130,10 +130,10 @@ private struct PermissionStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             SectionLabel("One permission")
-            Text("Accessibility access")
+            Text("Input Monitoring")
                 .font(.system(size: 24, weight: .medium, design: .serif))
                 .foregroundStyle(Theme.ink)
-            Text("macOS only lets an app observe key-down events through the Accessibility permission. WTC uses it to increment one counter per key code, and for nothing else.")
+            Text("macOS only lets an app observe key-down events through Input Monitoring. WTC uses it to increment one counter per key code, and for nothing else.")
                 .font(Theme.body)
                 .foregroundStyle(Theme.inkDim)
                 .lineSpacing(3)
@@ -143,15 +143,16 @@ private struct PermissionStep: View {
                     HStack(spacing: 10) {
                         Image(systemName: "gearshape.fill")
                             .foregroundStyle(Theme.inkDim)
-                        Text("System Settings › Privacy & Security › Accessibility")
+                        Text("System Settings › Privacy & Security › Input Monitoring")
                             .font(Theme.mono)
                             .foregroundStyle(Theme.ink)
                     }
-                    Text("Toggle on What the cap, then come back here.")
+                    Text("Toggle on What the cap, then come back here. Quit and reopen the app if the toggle does not stick.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.inkFaint)
                     Button("Open System Settings") {
-                        model.openAccessibilitySettings()
+                        model.requestInputMonitoring()
+                        model.openInputMonitoringSettings()
                     }
                     .buttonStyle(EmberButtonStyle())
                 }
@@ -161,7 +162,7 @@ private struct PermissionStep: View {
                 Circle()
                     .fill(model.isTrusted ? Theme.ember : Theme.inkDim)
                     .frame(width: 6, height: 6)
-                Text(model.isTrusted ? "Accessibility is on" : "Waiting for permission")
+                Text(model.isTrusted ? "Input Monitoring is on" : "Waiting for permission")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(Theme.inkDim)
             }
@@ -169,6 +170,7 @@ private struct PermissionStep: View {
         }
         .padding(36)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onAppear { model.requestInputMonitoring() }
     }
 }
 

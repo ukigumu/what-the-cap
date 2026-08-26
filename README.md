@@ -6,9 +6,11 @@ Runnable SwiftUI Mac app. The UI from the design pass is unchanged. This pass wi
 
 ## Run it
 
-Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens the main window, puts today's count in the menu bar, and shows Accessibility onboarding on first launch. Requires macOS 14. Grant Accessibility, then type. Counts land in `~/Library/Application Support/WhatTheCap/counts.sqlite`.
+`make` (or `make init`) checks the toolchain and verifies the project. `make run` builds and launches the app. `make help` lists the other targets.
 
-`./verify.sh` builds the app on macOS and runs the domain plus SQLite checks. On Linux it runs those checks alone. SwiftUI, the CGEvent tap, Accessibility, and login items need a Mac.
+Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens the main window, puts today's count in the menu bar, and shows Input Monitoring onboarding on first launch. Requires macOS 14. Grant Input Monitoring (not Accessibility), then type. Counts land in `~/Library/Application Support/WhatTheCap/counts.sqlite`.
+
+`./verify.sh` (also `make verify`) builds the app on macOS and runs the domain plus SQLite checks. On Linux it runs those checks alone. SwiftUI, the CGEvent tap, Input Monitoring, and login items need a Mac.
 
 ## The privacy contract the UI is built around
 
@@ -16,7 +18,7 @@ Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens th
 - Per-app tallies carry the bundle identifier and a count. No window titles, no documents.
 - Secure input (password fields) is a first-class paused state, not an edge case.
 - Local only. No network path exists for key data.
-- Visible app, menu bar presence, explicit Accessibility onboarding. No stealth.
+- Visible app, menu bar presence, explicit Input Monitoring onboarding. No stealth.
 
 ## Screens
 
@@ -45,7 +47,7 @@ A counting app drawn like a counting-house ledger. Warm obsidian ground, bone in
 
 - `EventTap` is a listen-only `CGEvent` session tap for key-down and modifier-down. It never swallows events, never reads unicode, and never touches the clipboard. Key repeat is ignored.
 - Secure input is checked in the callback. If a password field is focused, the tap records nothing and `CaptureState` becomes `secureInput`.
-- Accessibility trust is polled. Untrusted means `permissionDenied`, the tap is down, and the permission screen is shown. Onboarding calls `AXIsProcessTrustedWithOptions`.
+- Input Monitoring is polled with `CGPreflightListenEventAccess`. Untrusted means `permissionDenied`, the tap is down, and the permission screen is shown. Onboarding calls `CGRequestListenEventAccess`.
 - `PersistentStore` implements `KeystrokeStore`. The SQLite file has one table, `counts (day, hour, key_code, bundle_id, count)`. Increments only. No event log, so a sequence cannot be replayed.
 - Per-app rows store the frontmost bundle identifier from `NSWorkspace`. No window titles.
 - Launch at login uses `SMAppService.mainApp`.
