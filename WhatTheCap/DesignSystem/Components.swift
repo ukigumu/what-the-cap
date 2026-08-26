@@ -1,0 +1,223 @@
+import SwiftUI
+
+// MARK: - Wordmark
+
+struct Wordmark: View {
+    var compact = false
+
+    var body: some View {
+        if compact {
+            Text("WTC")
+                .font(.system(size: 19, weight: .semibold, design: .serif))
+                .italic()
+                .foregroundStyle(Theme.ink)
+                .kerning(1.5)
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("WTC")
+                    .font(.system(size: 34, weight: .semibold, design: .serif))
+                    .italic()
+                    .foregroundStyle(Theme.ink)
+                    .kerning(2)
+                Text("WHAT THE CAP")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(Theme.inkDim)
+                    .kerning(3.2)
+            }
+        }
+    }
+}
+
+// MARK: - Text primitives
+
+struct SectionLabel: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(Theme.sectionLabel)
+            .kerning(1.8)
+            .foregroundStyle(Theme.inkDim)
+    }
+}
+
+struct Hairline: View {
+    var body: some View {
+        Rectangle()
+            .fill(Theme.hairline)
+            .frame(height: 1)
+    }
+}
+
+// MARK: - Cards
+
+struct LedgerCard<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.cornerLarge, style: .continuous)
+                    .fill(Theme.bgRaised)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.cornerLarge, style: .continuous)
+                            .strokeBorder(Theme.hairline, lineWidth: 1)
+                    )
+            )
+    }
+}
+
+// MARK: - Keycap
+
+struct Keycap: View {
+    let legend: String
+    var sublegend: String?
+    var heat: Double = 0
+    var isControl = false
+    var width: CGFloat = 44
+    var height: CGFloat = 44
+
+    var body: some View {
+        let fill = Theme.heat(heat)
+        let bright = heat > 0.55
+        return ZStack {
+            RoundedRectangle(cornerRadius: Theme.cornerSmall, style: .continuous)
+                .fill(fill)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cornerSmall, style: .continuous)
+                        .strokeBorder(
+                            heat > 0.05 ? Theme.ember.opacity(0.25 + 0.4 * heat) : Theme.hairlineStrong,
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: heat > 0.3 ? Theme.ember.opacity(0.35 * heat) : .clear, radius: 7)
+
+            VStack(spacing: 0) {
+                if let sublegend {
+                    Text(sublegend)
+                        .font(.system(size: 8, weight: .regular, design: .monospaced))
+                        .foregroundStyle(bright ? Color.black.opacity(0.55) : Theme.inkFaint)
+                }
+                Text(legend)
+                    .font(Theme.keycapLegend)
+                    .foregroundStyle(
+                        bright ? Color.black.opacity(0.8) : (isControl ? Theme.inkFaint : Theme.inkDim)
+                    )
+            }
+        }
+        .frame(width: width, height: height)
+    }
+}
+
+// MARK: - Range picker
+
+struct RangePicker: View {
+    @Binding var selection: StatsRange
+    @Namespace private var pill
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(StatsRange.allCases) { range in
+                let isSelected = range == selection
+                Text(range.label)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular, design: .monospaced))
+                    .foregroundStyle(isSelected ? Color.black : Theme.inkDim)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background {
+                        if isSelected {
+                            Capsule().fill(Theme.ember)
+                                .matchedGeometryEffect(id: "pill", in: pill)
+                        }
+                    }
+                    .contentShape(Capsule())
+                    .onTapGesture {
+                        withAnimation(Theme.spring) { selection = range }
+                    }
+            }
+        }
+        .padding(3)
+        .background(
+            Capsule().fill(Theme.bgInset)
+                .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+        )
+    }
+}
+
+// MARK: - Buttons
+
+struct EmberButtonStyle: ButtonStyle {
+    var prominent = true
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(prominent ? Color.black : Theme.ink)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                Capsule().fill(prominent ? Theme.ember : Theme.bgRaised)
+                    .overlay(Capsule().strokeBorder(prominent ? Color.clear : Theme.hairlineStrong, lineWidth: 1))
+            )
+            .opacity(configuration.isPressed ? 0.75 : 1)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Capture state badge
+
+struct CaptureStateBadge: View {
+    let state: CaptureState
+
+    private var color: Color {
+        switch state {
+        case .active: Theme.ember
+        case .pausedByUser: Theme.inkDim
+        case .secureInput: Theme.calm
+        case .permissionDenied: Theme.danger
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 7) {
+            Circle()
+                .fill(color)
+                .frame(width: 6, height: 6)
+                .shadow(color: color.opacity(0.8), radius: state == .active ? 4 : 0)
+            Text(state.label.uppercased())
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .kerning(1.2)
+                .foregroundStyle(Theme.inkDim)
+        }
+    }
+}
+
+// MARK: - Staggered reveal
+
+struct Reveal: ViewModifier {
+    let index: Int
+    @State private var shown = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .offset(y: shown ? 0 : 14)
+            .onAppear {
+                withAnimation(Theme.slowSpring.delay(Double(index) * 0.06)) {
+                    shown = true
+                }
+            }
+    }
+}
+
+extension View {
+    func reveal(_ index: Int) -> some View {
+        modifier(Reveal(index: index))
+    }
+}
