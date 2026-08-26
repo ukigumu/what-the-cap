@@ -34,7 +34,8 @@ struct MenuBarLabel: View {
             Image(systemName: model.captureState.menuBarSymbol)
             if model.captureState.isCounting && model.hasData {
                 Text(model.store.todayTotal.compact)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .font(.system(size: 12, weight: .medium))
+                    .monospacedDigit()
                     .contentTransition(.numericText())
             }
         }

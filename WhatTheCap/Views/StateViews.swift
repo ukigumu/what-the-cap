@@ -16,7 +16,7 @@ struct EmptyStateView: View {
             Button("Restore mock data") {
                 withAnimation(Theme.spring) { model.restoreDemoData() }
             }
-            .buttonStyle(EmberButtonStyle())
+            .buttonStyle(AccentButtonStyle())
         }
     }
 }
@@ -36,11 +36,11 @@ struct PermissionDeniedView: View {
                     model.requestInputMonitoring()
                     model.openInputMonitoringSettings()
                 }
-                .buttonStyle(EmberButtonStyle())
+                .buttonStyle(AccentButtonStyle())
                 Button("Run onboarding") {
                     model.hasCompletedOnboarding = false
                 }
-                .buttonStyle(EmberButtonStyle(prominent: false))
+                .buttonStyle(AccentButtonStyle(prominent: false))
             }
         }
     }
@@ -69,7 +69,7 @@ private struct StatePage<Actions: View>: View {
             }
             .reveal(0)
             Text(title)
-                .font(.system(size: 22, weight: .medium, design: .serif))
+                .font(.system(size: 21, weight: .semibold))
                 .foregroundStyle(Theme.ink)
                 .reveal(1)
             Text(detail)

@@ -7,20 +7,28 @@ struct Wordmark: View {
 
     var body: some View {
         if compact {
-            Text("WTC")
-                .font(.system(size: 19, weight: .semibold, design: .serif))
-                .italic()
-                .foregroundStyle(Theme.ink)
-                .kerning(1.5)
-        } else {
-            VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
                 Text("WTC")
-                    .font(.system(size: 34, weight: .semibold, design: .serif))
-                    .italic()
-                    .foregroundStyle(Theme.ink)
+                    .font(.system(size: 17, weight: .bold))
                     .kerning(2)
+                    .foregroundStyle(Theme.ink)
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(Theme.amber)
+                    .frame(width: 7, height: 7)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text("WTC")
+                        .font(.system(size: 28, weight: .bold))
+                        .kerning(3)
+                        .foregroundStyle(Theme.ink)
+                    RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+                        .fill(Theme.amber)
+                        .frame(width: 9, height: 9)
+                }
                 Text("WHAT THE CAP")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(Theme.inkDim)
                     .kerning(3.2)
             }
@@ -40,7 +48,7 @@ struct SectionLabel: View {
     var body: some View {
         Text(text.uppercased())
             .font(Theme.sectionLabel)
-            .kerning(1.8)
+            .kerning(1.4)
             .foregroundStyle(Theme.inkDim)
     }
 }
@@ -55,7 +63,7 @@ struct Hairline: View {
 
 // MARK: - Cards
 
-struct LedgerCard<Content: View>: View {
+struct Panel<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -90,23 +98,19 @@ struct Keycap: View {
                 .fill(fill)
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.cornerSmall, style: .continuous)
-                        .strokeBorder(
-                            heat > 0.05 ? Theme.ember.opacity(0.25 + 0.4 * heat) : Theme.hairlineStrong,
-                            lineWidth: 1
-                        )
+                        .strokeBorder(heat > 0.05 ? Color.clear : Theme.hairlineStrong, lineWidth: 1)
                 )
-                .shadow(color: heat > 0.3 ? Theme.ember.opacity(0.35 * heat) : .clear, radius: 7)
 
             VStack(spacing: 0) {
                 if let sublegend {
                     Text(sublegend)
-                        .font(.system(size: 8, weight: .regular, design: .monospaced))
-                        .foregroundStyle(bright ? Color.black.opacity(0.55) : Theme.inkFaint)
+                        .font(.system(size: 8, weight: .regular))
+                        .foregroundStyle(bright ? Theme.bg.opacity(0.6) : Theme.inkFaint)
                 }
                 Text(legend)
                     .font(Theme.keycapLegend)
                     .foregroundStyle(
-                        bright ? Color.black.opacity(0.8) : (isControl ? Theme.inkFaint : Theme.inkDim)
+                        bright ? Theme.bg : (isControl ? Theme.inkFaint : Theme.inkDim)
                     )
             }
         }
@@ -125,13 +129,13 @@ struct RangePicker: View {
             ForEach(StatsRange.allCases) { range in
                 let isSelected = range == selection
                 Text(range.label)
-                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular, design: .monospaced))
-                    .foregroundStyle(isSelected ? Color.black : Theme.inkDim)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? Theme.bg : Theme.inkDim)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
                     .background {
                         if isSelected {
-                            Capsule().fill(Theme.ember)
+                            Capsule().fill(Theme.amber)
                                 .matchedGeometryEffect(id: "pill", in: pill)
                         }
                     }
@@ -151,17 +155,17 @@ struct RangePicker: View {
 
 // MARK: - Buttons
 
-struct EmberButtonStyle: ButtonStyle {
+struct AccentButtonStyle: ButtonStyle {
     var prominent = true
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(prominent ? Color.black : Theme.ink)
+            .foregroundStyle(prominent ? Theme.bg : Theme.ink)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(
-                Capsule().fill(prominent ? Theme.ember : Theme.bgRaised)
+                Capsule().fill(prominent ? Theme.amber : Theme.bgRaised)
                     .overlay(Capsule().strokeBorder(prominent ? Color.clear : Theme.hairlineStrong, lineWidth: 1))
             )
             .opacity(configuration.isPressed ? 0.75 : 1)
@@ -177,7 +181,7 @@ struct CaptureStateBadge: View {
 
     private var color: Color {
         switch state {
-        case .active: Theme.ember
+        case .active: Theme.amber
         case .pausedByUser: Theme.inkDim
         case .secureInput: Theme.calm
         case .permissionDenied: Theme.danger
@@ -189,9 +193,8 @@ struct CaptureStateBadge: View {
             Circle()
                 .fill(color)
                 .frame(width: 6, height: 6)
-                .shadow(color: color.opacity(0.8), radius: state == .active ? 4 : 0)
             Text(state.label.uppercased())
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .font(.system(size: 10, weight: .semibold))
                 .kerning(1.2)
                 .foregroundStyle(Theme.inkDim)
         }

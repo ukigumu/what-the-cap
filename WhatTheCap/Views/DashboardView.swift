@@ -16,7 +16,7 @@ struct DashboardView: View {
                             .font(Theme.displayTitle)
                             .foregroundStyle(Theme.ink)
                         Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "en_US"))))
-                            .font(Theme.mono)
+                            .font(.system(size: 12))
                             .foregroundStyle(Theme.inkFaint)
                     }
                     Spacer()
@@ -27,7 +27,7 @@ struct DashboardView: View {
                 heroTotal(total, range: range)
                     .reveal(1)
 
-                LedgerCard {
+                Panel {
                     VStack(alignment: .leading, spacing: 16) {
                         SectionLabel(range == .today ? "By hour" : "By day")
                         BarChart(samples: model.store.bars(for: range))
@@ -37,7 +37,7 @@ struct DashboardView: View {
                 }
                 .reveal(2)
 
-                LedgerCard {
+                Panel {
                     VStack(alignment: .leading, spacing: 16) {
                         SectionLabel("Top keys")
                         TopKeysRow(
@@ -65,12 +65,12 @@ struct DashboardView: View {
                 .animation(Theme.spring, value: total)
             HStack(spacing: 12) {
                 Text("keystrokes · \(range.label.lowercased())")
-                    .font(Theme.mono)
+                    .font(.system(size: 12))
                     .foregroundStyle(Theme.inkDim)
                 if previous > 0 {
                     Text("\(delta >= 0 ? "▲" : "▼") \(abs(delta).formatted(.percent.precision(.fractionLength(0))))  vs previous \(range.dayCount == 1 ? "day" : "\(range.dayCount) days")")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(delta >= 0 ? Theme.ember : Theme.inkFaint)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(delta >= 0 ? Theme.ink : Theme.inkFaint)
                 }
             }
         }
@@ -89,15 +89,15 @@ struct BarChart: View {
             let labelEvery = samples.count > 12 ? 5 : 1
             HStack(alignment: .bottom, spacing: samples.count > 12 ? 4 : 10) {
                 ForEach(Array(samples.enumerated()), id: \.offset) { index, sample in
+                    let isHot = sample.value == peak
                     VStack(spacing: 6) {
                         Spacer(minLength: 0)
                         Capsule(style: .continuous)
-                            .fill(sample.isCurrent ? AnyShapeStyle(Theme.ember) : AnyShapeStyle(Theme.ember.opacity(0.34)))
+                            .fill(isHot ? Theme.amber : Theme.creamBar)
                             .frame(height: max(3, (geo.size.height - 24) * CGFloat(sample.value) / CGFloat(peak)))
-                            .shadow(color: sample.isCurrent ? Theme.ember.opacity(0.5) : .clear, radius: 6)
                         Text(index % labelEvery == 0 ? sample.label : " ")
-                            .font(.system(size: 9, weight: .regular, design: .monospaced))
-                            .foregroundStyle(sample.isCurrent ? Theme.ember : Theme.inkFaint)
+                            .font(.system(size: 9))
+                            .foregroundStyle(sample.isCurrent ? Theme.ink : Theme.inkFaint)
                             .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity)
@@ -126,10 +126,10 @@ struct TopKeysRow: View {
                         height: 46
                     )
                     Text(key.count.compact)
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.inkDim)
                     Text(share(of: key))
-                        .font(.system(size: 9, weight: .regular, design: .monospaced))
+                        .font(.system(size: 9))
                         .foregroundStyle(Theme.inkFaint)
                 }
                 .reveal(index)

@@ -17,7 +17,7 @@ struct HeatmapView: View {
                             .font(Theme.displayTitle)
                             .foregroundStyle(Theme.ink)
                         Text("Per-key intensity · \(model.selectedRange.label.lowercased())")
-                            .font(Theme.mono)
+                            .font(.system(size: 12))
                             .foregroundStyle(Theme.inkFaint)
                     }
                     Spacer()
@@ -28,7 +28,7 @@ struct HeatmapView: View {
                 LayoutToggle(selection: $model.keyboardLayout)
                     .reveal(1)
 
-                LedgerCard {
+                Panel {
                     KeyboardMap(
                         layout: model.keyboardLayout,
                         counts: counts,
@@ -61,7 +61,7 @@ struct LayoutToggle: View {
             ForEach(KeyboardLayout.all) { layout in
                 let isSelected = layout == selection
                 Text(layout.name)
-                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular, design: .monospaced))
+                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Theme.ink : Theme.inkFaint)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 5)
@@ -143,7 +143,7 @@ struct HeatLegend: View {
     var body: some View {
         HStack(spacing: 10) {
             Text("COLD")
-                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .font(.system(size: 9, weight: .semibold))
                 .kerning(1.2)
                 .foregroundStyle(Theme.inkFaint)
             LinearGradient(
@@ -154,9 +154,9 @@ struct HeatLegend: View {
             .frame(width: 140, height: 6)
             .clipShape(Capsule())
             Text("HOT")
-                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .font(.system(size: 9, weight: .semibold))
                 .kerning(1.2)
-                .foregroundStyle(Theme.ember)
+                .foregroundStyle(Theme.amber)
         }
     }
 }
@@ -171,17 +171,17 @@ struct HoverReadout: View {
             if let key, let code = key.code {
                 let count = counts[code] ?? 0
                 Text(key.legend.isEmpty ? "SPACE" : key.legend)
-                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.ink)
                 Text("key \(code)")
                     .font(.system(size: 10, weight: .regular, design: .monospaced))
                     .foregroundStyle(Theme.inkFaint)
                 Text(count.grouped)
-                    .font(.system(size: 13, weight: .medium, design: .serif))
-                    .foregroundStyle(Theme.ember)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
                 if total > 0 {
                     Text((Double(count) / Double(total)).formatted(.percent.precision(.fractionLength(1))))
-                        .font(.system(size: 10, weight: .regular, design: .monospaced))
+                        .font(.system(size: 10))
                         .foregroundStyle(Theme.inkDim)
                 }
             } else {

@@ -15,12 +15,12 @@ struct SettingsView: View {
                         .font(Theme.displayTitle)
                         .foregroundStyle(Theme.ink)
                     Text("Everything stays on this Mac")
-                        .font(Theme.mono)
+                        .font(.system(size: 12))
                         .foregroundStyle(Theme.inkFaint)
                 }
                 .reveal(0)
 
-                LedgerCard {
+                Panel {
                     VStack(alignment: .leading, spacing: 18) {
                         SectionLabel("General")
                         SettingRow(
@@ -29,7 +29,7 @@ struct SettingsView: View {
                         ) {
                             Toggle("", isOn: $model.launchAtLogin)
                                 .toggleStyle(.switch)
-                                .tint(Theme.ember)
+                                .tint(Theme.amber)
                                 .labelsHidden()
                         }
                         Hairline()
@@ -44,7 +44,7 @@ struct SettingsView: View {
                                 set: { _ in withAnimation(Theme.spring) { model.togglePause() } }
                             ))
                             .toggleStyle(.switch)
-                            .tint(Theme.ember)
+                            .tint(Theme.amber)
                             .labelsHidden()
                             .disabled(!model.captureState.isCounting && model.captureState != .pausedByUser)
                         }
@@ -52,7 +52,7 @@ struct SettingsView: View {
                 }
                 .reveal(1)
 
-                LedgerCard {
+                Panel {
                     VStack(alignment: .leading, spacing: 18) {
                         SectionLabel("Data")
                         SettingRow(
@@ -60,7 +60,7 @@ struct SettingsView: View {
                             detail: "Key code, legend, and count. The export contains no typed text because none is stored."
                         ) {
                             Button("Export…") { exportingCSV = true }
-                                .buttonStyle(EmberButtonStyle(prominent: false))
+                                .buttonStyle(AccentButtonStyle(prominent: false))
                         }
                         Hairline()
                         SettingRow(
@@ -68,14 +68,14 @@ struct SettingsView: View {
                             detail: "Deletes every tally on this Mac. There is no cloud copy to restore from."
                         ) {
                             Button("Reset…") { confirmReset = true }
-                                .buttonStyle(EmberButtonStyle(prominent: false))
+                                .buttonStyle(AccentButtonStyle(prominent: false))
                                 .foregroundStyle(Theme.danger)
                         }
                     }
                 }
                 .reveal(2)
 
-                LedgerCard {
+                Panel {
                     VStack(alignment: .leading, spacing: 14) {
                         SectionLabel("Privacy")
                         PrivacyRow(symbol: "number", text: "Counts are kept per key code. Key order is never stored, so nothing can be replayed.")
@@ -86,7 +86,7 @@ struct SettingsView: View {
                 }
                 .reveal(3)
 
-                LedgerCard {
+                Panel {
                     VStack(alignment: .leading, spacing: 18) {
                         SectionLabel("Design demo")
                         Text("Preview banners without changing live capture. Restore writes the seeded dataset into the local count file.")
@@ -107,12 +107,12 @@ struct SettingsView: View {
                         Hairline()
                         SettingRow(title: "Mock data", detail: "Restore the seeded dataset after a reset.") {
                             Button("Restore") { withAnimation(Theme.spring) { model.restoreDemoData() } }
-                                .buttonStyle(EmberButtonStyle(prominent: false))
+                                .buttonStyle(AccentButtonStyle(prominent: false))
                         }
                         Hairline()
                         SettingRow(title: "Onboarding", detail: "Run the permission flow again.") {
                             Button("Show") { model.hasCompletedOnboarding = false }
-                                .buttonStyle(EmberButtonStyle(prominent: false))
+                                .buttonStyle(AccentButtonStyle(prominent: false))
                         }
                     }
                 }
@@ -171,7 +171,7 @@ struct PrivacyRow: View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Image(systemName: symbol)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Theme.ember)
+                .foregroundStyle(Theme.amber)
                 .frame(width: 16)
             Text(text)
                 .font(Theme.caption)

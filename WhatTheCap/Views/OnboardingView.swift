@@ -26,7 +26,7 @@ struct OnboardingView: View {
                 HStack(spacing: 6) {
                     ForEach(0..<stepCount, id: \.self) { index in
                         Capsule()
-                            .fill(index == step ? Theme.ember : Theme.hairlineStrong)
+                            .fill(index == step ? Theme.amber : Theme.hairlineStrong)
                             .frame(width: index == step ? 18 : 6, height: 6)
                     }
                 }
@@ -35,7 +35,7 @@ struct OnboardingView: View {
                     Button("Back") {
                         withAnimation(Theme.spring) { step -= 1 }
                     }
-                    .buttonStyle(EmberButtonStyle(prominent: false))
+                    .buttonStyle(AccentButtonStyle(prominent: false))
                 }
                 Button(step == stepCount - 1 ? "Start counting" : "Continue") {
                     withAnimation(Theme.spring) {
@@ -46,7 +46,7 @@ struct OnboardingView: View {
                         }
                     }
                 }
-                .buttonStyle(EmberButtonStyle())
+                .buttonStyle(AccentButtonStyle())
                 .keyboardShortcut(.defaultAction)
             }
             .padding(24)
@@ -67,7 +67,7 @@ private struct WelcomeStep: View {
             Spacer()
             Wordmark()
             Text("Your keyboard, in numbers.")
-                .font(.system(size: 24, weight: .medium, design: .serif))
+                .font(.system(size: 23, weight: .semibold))
                 .foregroundStyle(Theme.ink)
             Text("WTC counts how often each key gets pressed.\nIt never records what you type.")
                 .font(Theme.body)
@@ -77,7 +77,7 @@ private struct WelcomeStep: View {
             Spacer()
             HStack(spacing: 10) {
                 ForEach(Array("HOLA".enumerated()), id: \.offset) { index, char in
-                    Keycap(legend: String(char), heat: 0.25 + Double(index) * 0.22, width: 40, height: 40)
+                    Keycap(legend: String(char), heat: 0.25 + Double(index) * 0.25, width: 40, height: 40)
                         .reveal(index + 2)
                 }
             }
@@ -92,7 +92,7 @@ private struct PrivacyStep: View {
         VStack(alignment: .leading, spacing: 24) {
             SectionLabel("The privacy contract")
             Text("Counts, never content.")
-                .font(.system(size: 24, weight: .medium, design: .serif))
+                .font(.system(size: 23, weight: .semibold))
                 .foregroundStyle(Theme.ink)
 
             VStack(alignment: .leading, spacing: 18) {
@@ -131,14 +131,14 @@ private struct PermissionStep: View {
         VStack(alignment: .leading, spacing: 24) {
             SectionLabel("One permission")
             Text("Input Monitoring")
-                .font(.system(size: 24, weight: .medium, design: .serif))
+                .font(.system(size: 23, weight: .semibold))
                 .foregroundStyle(Theme.ink)
             Text("macOS only lets an app observe key-down events through Input Monitoring. WTC uses it to increment one counter per key code, and for nothing else.")
                 .font(Theme.body)
                 .foregroundStyle(Theme.inkDim)
                 .lineSpacing(3)
 
-            LedgerCard {
+            Panel {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 10) {
                         Image(systemName: "gearshape.fill")
@@ -154,16 +154,16 @@ private struct PermissionStep: View {
                         model.requestInputMonitoring()
                         model.openInputMonitoringSettings()
                     }
-                    .buttonStyle(EmberButtonStyle())
+                    .buttonStyle(AccentButtonStyle())
                 }
             }
 
             HStack(spacing: 8) {
                 Circle()
-                    .fill(model.isTrusted ? Theme.ember : Theme.inkDim)
+                    .fill(model.isTrusted ? Theme.amber : Theme.inkDim)
                     .frame(width: 6, height: 6)
                 Text(model.isTrusted ? "Input Monitoring is on" : "Waiting for permission")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Theme.inkDim)
             }
             Spacer()
@@ -183,7 +183,7 @@ private struct ContractRow: View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Theme.ember)
+                .foregroundStyle(Theme.amber)
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)

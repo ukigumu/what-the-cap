@@ -17,7 +17,7 @@ struct AppsView: View {
                             .font(Theme.displayTitle)
                             .foregroundStyle(Theme.ink)
                         Text("Where the keystrokes landed · \(model.selectedRange.label.lowercased())")
-                            .font(Theme.mono)
+                            .font(.system(size: 12))
                             .foregroundStyle(Theme.inkFaint)
                     }
                     Spacer()
@@ -25,7 +25,7 @@ struct AppsView: View {
                 }
                 .reveal(0)
 
-                LedgerCard {
+                Panel {
                     VStack(spacing: 0) {
                         ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
                             AppRow(rank: index + 1, app: app, peak: peak, total: total)
@@ -62,9 +62,8 @@ struct AppRow: View {
     var body: some View {
         HStack(spacing: 18) {
             Text("\(rank)")
-                .font(.system(size: 20, weight: .medium, design: .serif))
-                .italic()
-                .foregroundStyle(rank <= 3 ? Theme.ember : Theme.inkFaint)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(rank == 1 ? Theme.amber : Theme.inkFaint)
                 .frame(width: 30, alignment: .trailing)
 
             VStack(alignment: .leading, spacing: 7) {
@@ -74,19 +73,19 @@ struct AppRow: View {
                         .foregroundStyle(Theme.ink)
                     Spacer()
                     Text(app.count.grouped)
-                        .font(.system(size: 14, weight: .medium, design: .serif))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Theme.ink)
                     Text(share)
-                        .font(.system(size: 10, weight: .regular, design: .monospaced))
+                        .font(.system(size: 10))
                         .foregroundStyle(Theme.inkFaint)
                         .frame(width: 48, alignment: .trailing)
                 }
                 GeometryReader { geo in
                     Capsule()
-                        .fill(Theme.ember.opacity(rank <= 3 ? 0.85 : 0.3))
-                        .frame(width: max(3, geo.size.width * CGFloat(app.count) / CGFloat(peak)), height: 3)
+                        .fill(rank == 1 ? Theme.amber : Theme.creamBar)
+                        .frame(width: max(3, geo.size.width * CGFloat(app.count) / CGFloat(peak)), height: 4)
                 }
-                .frame(height: 3)
+                .frame(height: 4)
             }
         }
         .padding(.vertical, 13)

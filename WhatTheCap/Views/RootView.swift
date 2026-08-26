@@ -100,12 +100,12 @@ struct RailView: View {
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                 Spacer()
             }
-            .foregroundStyle(isSelected ? Theme.ember : Theme.inkDim)
+            .foregroundStyle(isSelected ? Theme.amber : Theme.inkDim)
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isSelected ? Theme.emberGlow : Color.clear)
+                    .fill(isSelected ? Theme.amberSoft : Color.clear)
             )
             .contentShape(RoundedRectangle(cornerRadius: 8))
         }
@@ -120,7 +120,7 @@ struct CaptureBanner: View {
     let state: CaptureState
 
     private var tint: Color {
-        state == .secureInput ? Theme.calm : Theme.ember
+        state == .secureInput ? Theme.calm : Theme.amber
     }
 
     var body: some View {
@@ -139,7 +139,7 @@ struct CaptureBanner: View {
             Spacer()
             if state == .pausedByUser {
                 Button("Resume") { withAnimation(Theme.spring) { model.togglePause() } }
-                    .buttonStyle(EmberButtonStyle())
+                    .buttonStyle(AccentButtonStyle())
             }
         }
         .padding(.horizontal, Theme.pagePadding)

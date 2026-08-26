@@ -21,14 +21,14 @@ struct MenuBarView: View {
                         .contentTransition(.numericText(value: Double(model.store.todayTotal)))
                         .animation(Theme.spring, value: model.store.todayTotal)
                     Text("keystrokes today")
-                        .font(Theme.mono)
+                        .font(.system(size: 12))
                         .foregroundStyle(Theme.inkDim)
                 } else {
                     Text(model.captureState.blocksContent ? "—" : "0")
                         .font(Theme.displayNumber(40))
                         .foregroundStyle(Theme.inkFaint)
                     Text(model.captureState.blocksContent ? "permission needed" : "nothing counted yet")
-                        .font(Theme.mono)
+                        .font(.system(size: 12))
                         .foregroundStyle(Theme.inkFaint)
                 }
             }
