@@ -231,16 +231,20 @@ final class MockKeystrokeStore: KeystrokeStore {
             + Array(repeating: 0, count: 23 - hourNow)
     }
 
-    private static func distribute<Key>(
+    /// Iterates sorted keys because dictionary order changes per process and
+    /// would break run-to-run determinism of the RNG stream.
+    private static func distribute<Key: Comparable>(
         _ total: Int,
         over weights: [Key: Double],
         using rng: inout SplitMix64
     ) -> [Key: Int] {
         let weightSum = weights.values.reduce(0, +)
-        return weights.mapValues { weight in
+        var result: [Key: Int] = [:]
+        for key in weights.keys.sorted() {
             let jitter = Double.random(in: 0.82...1.18, using: &rng)
-            return max(0, Int(Double(total) * weight / weightSum * jitter))
+            result[key] = max(0, Int(Double(total) * (weights[key] ?? 0) / weightSum * jitter))
         }
+        return result
     }
 }
 
