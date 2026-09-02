@@ -18,7 +18,7 @@ Early. This repository currently holds product intent and docs; build/run instru
 
 ## Privacy
 
-- **Counts only** — aggregates, not content
+- **Counts only** - aggregates, not content
 - No cloud sync of keystrokes in the product design
 - No typed-text storage, ever
 
