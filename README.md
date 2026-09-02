@@ -1,31 +1,56 @@
-# What the Cap (WTC)
+# What the cap (WTC)
 
-Native **macOS menu-bar** app that counts keystrokes. Counts only. **Never stores typed text.**
+Native macOS menu-bar app that counts keystrokes. Counts only. Never stores typed text.
 
-## Why it exists
+Runnable SwiftUI Mac app. The UI from the design pass is unchanged. This pass wires the real engine behind `KeystrokeStore` and `CaptureState`.
 
-Most “keyboard trackers” are surveillance tools in disguise. WTC is the opposite: a tiny local counter for people who want volume metrics (practice, fatigue, writing days) without a keylog.
+## Run it
 
-## What it does
+`make` (or `make init`) checks the toolchain and verifies the project. `make run` builds and launches the app. `make help` lists the other targets.
 
-- Lives in the macOS menu bar
-- Counts keys locally on your machine
-- Does **not** record characters, passwords, or buffers of what you typed
+Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens the main window, puts today's count in the menu bar, and shows Input Monitoring onboarding on first launch. Requires macOS 14. Grant Input Monitoring (not Accessibility), then type. Counts land in `~/Library/Application Support/WhatTheCap/counts.sqlite`.
 
-## Status
+`./verify.sh` (also `make verify`) builds the app on macOS and runs the domain plus SQLite checks. On Linux it runs those checks alone. SwiftUI, the CGEvent tap, Input Monitoring, and login items need a Mac.
 
-Early. This repository currently holds product intent and docs; build/run instructions will land with the native app sources. Treat it as public WIP, not a finished App Store product.
+## The privacy contract the UI is built around
 
-## Privacy
+- Counts are kept per key code. Key order is never stored, so words and passwords cannot be reconstructed.
+- Per-app tallies carry the bundle identifier and a count. No window titles, no documents.
+- Secure input (password fields) is a first-class paused state, not an edge case.
+- Local only. No network path exists for key data.
+- Visible app, menu bar presence, explicit Input Monitoring onboarding. No stealth.
 
-- **Counts only** - aggregates, not content
-- No cloud sync of keystrokes in the product design
-- No typed-text storage, ever
+## Screens
 
-## License
+Images below are design renders: the HTML preview in `design/preview/` uses the app's own mock dataset (exported by `design/preview/generate.sh` from the Swift domain code) and the same design tokens as `Theme.swift`. They are not macOS screenshots; this repo's CI box is Linux. Fonts stand in for macOS: Inter for SF Pro, JetBrains Mono for SF Mono.
 
-License file not published yet. Until one is added, ask before redistributing.
+| Screen | Render |
+| --- | --- |
+| Overview, today (hourly bars, top keys) | ![Overview today](design/screenshots/overview-today.png) |
+| Overview, 30 days (weekday rhythm) | ![Overview 30 days](design/screenshots/overview-30days.png) |
+| Heatmap, ISO Spanish | ![Heatmap ISO Spanish](design/screenshots/heatmap-iso-spanish.png) |
+| Heatmap, ANSI | ![Heatmap ANSI](design/screenshots/heatmap-ansi.png) |
+| Per app (bundle ids only) | ![Per app](design/screenshots/per-app.png) |
+| Settings | ![Settings](design/screenshots/settings.png) |
+| Onboarding, permission step | ![Onboarding permission](design/screenshots/onboarding-permission.png) |
+| Menu bar extra | ![Menu bar](design/screenshots/menubar.png) |
+| Paused | ![Paused](design/screenshots/state-paused.png) |
+| Permission denied | ![Permission denied](design/screenshots/state-permission-denied.png) |
 
-## Links
+More in `design/screenshots/`: 7-day range, both remaining onboarding steps, empty, and secure-input.
 
-- Author: [ukigumu](https://github.com/ukigumu) / Deivid
+## Design language
+
+Linear-style product language, anchored on the app icon. Flat navy ground (RGB 22, 24, 36), cream ink and rounded cream bars, and one amber accent that marks only the hottest value in any chart. Geometric sans throughout (SF Pro, nothing bundled), mono reserved for key codes and bundle identifiers, hairline rules, no glow. The heatmap ramps from navy keycap through cream, and the single hottest key turns amber. The app icon repeats the system: three cream bars and one amber square on the same navy. Motion is numeric-text transitions on totals, spring bars, and staggered reveals.
+
+## Engine
+
+- `EventTap` is a listen-only `CGEvent` session tap for key-down and modifier-down. It never swallows events, never reads unicode, and never touches the clipboard. Key repeat is ignored.
+- Secure input is checked in the callback. If a password field is focused, the tap records nothing and `CaptureState` becomes `secureInput`.
+- Input Monitoring is polled with `CGPreflightListenEventAccess`. Untrusted means `permissionDenied`, the tap is down, and the permission screen is shown. Onboarding calls `CGRequestListenEventAccess`.
+- `PersistentStore` implements `KeystrokeStore`. The SQLite file has one table, `counts (day, hour, key_code, bundle_id, count)`. Increments only. No event log, so a sequence cannot be replayed.
+- Per-app rows store the frontmost bundle identifier from `NSWorkspace`. No window titles.
+- Launch at login uses `SMAppService.mainApp`.
+- Settings still has a Design demo card. It overrides the displayed state only. Live capture keeps following trust, pause, and secure input.
+
+`MockKeystrokeStore` remains for `verify.sh` and for Restore mock data, which writes the seeded dataset into the same SQLite file.
