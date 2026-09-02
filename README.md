@@ -4,13 +4,57 @@ Native macOS menu-bar app that counts keystrokes. Counts only. Never stores type
 
 Runnable SwiftUI Mac app. The UI from the design pass is unchanged. This pass wires the real engine behind `KeystrokeStore` and `CaptureState`.
 
+## Requirements
+
+- macOS 14+
+- Xcode 16+ (for `xcodebuild` / Run)
+- **Input Monitoring** permission (not Accessibility)
+
 ## Run it
 
 `make` (or `make init`) checks the toolchain and verifies the project. `make run` builds and launches the app. `make help` lists the other targets.
 
-Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens the main window, puts today's count in the menu bar, and shows Input Monitoring onboarding on first launch. Requires macOS 14. Grant Input Monitoring (not Accessibility), then type. Counts land in `~/Library/Application Support/WhatTheCap/counts.sqlite`.
+| Target | What it does |
+| --- | --- |
+| `make` / `make init` | `check` + `verify` (default) |
+| `make check` | Ensure `swiftc` / `xcodebuild` exist |
+| `make build` | Debug build via `xcodebuild` into `build/` |
+| `make run` | Build and launch the app |
+| `make install` | Release build and copy to `/Applications/WhatTheCap.app` |
+| `make verify` | Run `./verify.sh` |
+| `make preview` | Regenerate design preview data and screenshots |
+| `make clean` | Remove local build artifacts |
+| `make help` | List targets |
+
+Open `WhatTheCap.xcodeproj` in Xcode 16 or newer and press Run. The app opens the main window, puts today's count in the menu bar, and shows Input Monitoring onboarding on first launch. Grant Input Monitoring, then type. Counts land in `~/Library/Application Support/WhatTheCap/counts.sqlite`.
 
 `./verify.sh` (also `make verify`) builds the app on macOS and runs the domain plus SQLite checks. On Linux it runs those checks alone. SwiftUI, the CGEvent tap, Input Monitoring, and login items need a Mac.
+
+## Features
+
+- **Overview** - today (hourly bars, top keys), 7-day, and 30-day ranges
+- **Heatmap** - ISO Spanish and ANSI layouts (virtual key codes only)
+- **Per app** - tallies by frontmost bundle identifier (no window titles)
+- **Settings**
+  - Launch at login via `SMAppService.mainApp`
+  - Pause / resume counting
+  - Export counts as CSV (key code, legend, count; no typed text)
+  - Reset all counts
+  - Restore mock / demo data into the same SQLite file
+  - Design demo override for `CaptureState` banners (display only; live capture still follows trust, pause, and secure input)
+- **Menu bar** - today's count plus a glyph driven by `CaptureState`
+- **Onboarding** - Input Monitoring request on first launch
+
+## Capture states
+
+`CaptureState` is the single source of truth for banners, empty states, and the menu-bar glyph. Resolution order: no Input Monitoring, user pause, secure input, then active.
+
+| State | Meaning |
+| --- | --- |
+| `active` | Counting key-down events |
+| `pausedByUser` | You paused; nothing is recorded until resume |
+| `secureInput` | Password / secure-input field focused; tap records nothing |
+| `permissionDenied` | Input Monitoring missing; content blocked, permission UI shown |
 
 ## The privacy contract the UI is built around
 
@@ -54,3 +98,21 @@ Linear-style product language, anchored on the app icon. Flat navy ground (RGB 2
 - Settings still has a Design demo card. It overrides the displayed state only. Live capture keeps following trust, pause, and secure input.
 
 `MockKeystrokeStore` remains for `verify.sh` and for Restore mock data, which writes the seeded dataset into the same SQLite file.
+
+## Repo layout
+
+```text
+WhatTheCap/           SwiftUI app
+  Engine/             EventTap, system state
+  Store/              SQLite persistent counts
+  Models/             CaptureState, layouts, stats, store protocol
+  Views/              Overview, heatmap, apps, settings, onboarding, menu bar
+  Mock/               Seeded dataset for verify + restore
+  DesignSystem/       Theme and shared components
+design/
+  preview/            HTML preview + generate.sh
+  screenshots/        Design renders linked above
+  appicon/            App icon source
+verify/               Domain + SQLite checks used by verify.sh
+Makefile              Local build / run / install / verify
+```
