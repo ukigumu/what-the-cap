@@ -58,7 +58,7 @@ enum Theme {
     static func heat(_ intensity: Double) -> Color {
         let t = min(max(intensity, 0), 1)
         if t >= 1 { return amber }
-        return Color.blend(keycap, ink, t)
+        return Color.blend(0x212436, 0xF7F3EA, t)
     }
 }
 
@@ -72,15 +72,16 @@ extension Color {
         )
     }
 
-    static func blend(_ a: Color, _ b: Color, _ t: Double) -> Color {
-        let ca = NSColor(a).usingColorSpace(.sRGB) ?? .black
-        let cb = NSColor(b).usingColorSpace(.sRGB) ?? .black
+    static func blend(_ a: UInt32, _ b: UInt32, _ t: Double) -> Color {
         let k = min(max(t, 0), 1)
+        func channel(_ hex: UInt32, shift: UInt32) -> Double {
+            Double((hex >> shift) & 0xFF) / 255
+        }
         return Color(
             .sRGB,
-            red: ca.redComponent + (cb.redComponent - ca.redComponent) * k,
-            green: ca.greenComponent + (cb.greenComponent - ca.greenComponent) * k,
-            blue: ca.blueComponent + (cb.blueComponent - ca.blueComponent) * k
+            red: channel(a, shift: 16) + (channel(b, shift: 16) - channel(a, shift: 16)) * k,
+            green: channel(a, shift: 8) + (channel(b, shift: 8) - channel(a, shift: 8)) * k,
+            blue: channel(a, shift: 0) + (channel(b, shift: 0) - channel(a, shift: 0)) * k
         )
     }
 }

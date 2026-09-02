@@ -15,11 +15,9 @@ struct MenuBarView: View {
                     CaptureStateBadge(state: model.captureState)
                 }
                 if model.hasData && !model.captureState.blocksContent {
-                    Text(model.store.todayTotal.grouped)
+                    Text(model.menuTotal.grouped)
                         .font(Theme.displayNumber(40))
                         .foregroundStyle(Theme.ink)
-                        .contentTransition(.numericText(value: Double(model.store.todayTotal)))
-                        .animation(Theme.spring, value: model.store.todayTotal)
                     Text("keystrokes today")
                         .font(.system(size: 12))
                         .foregroundStyle(Theme.inkDim)

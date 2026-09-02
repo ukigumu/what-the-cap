@@ -62,7 +62,7 @@ struct DashboardView: View {
                 .font(Theme.displayNumber(76))
                 .foregroundStyle(Theme.ink)
                 .contentTransition(.numericText(value: Double(total)))
-                .animation(Theme.spring, value: total)
+                .animation(.easeOut(duration: 0.12), value: total)
             HStack(spacing: 12) {
                 Text("keystrokes · \(range.label.lowercased())")
                     .font(.system(size: 12))
@@ -132,7 +132,6 @@ struct TopKeysRow: View {
                         .font(.system(size: 9))
                         .foregroundStyle(Theme.inkFaint)
                 }
-                .reveal(index)
             }
             Spacer()
         }

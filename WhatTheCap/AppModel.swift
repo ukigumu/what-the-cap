@@ -53,6 +53,7 @@ final class AppModel {
     }
 
     var isTrusted = false
+    var menuTotal = 0
 
     var hasData: Bool { store.hasData }
 
@@ -64,6 +65,8 @@ final class AppModel {
 
     #if os(macOS)
     @ObservationIgnored private var tap = EventTap()
+    @ObservationIgnored private var cachedBundleID = "unknown"
+    @ObservationIgnored private var bundleIDSampledAt: TimeInterval = 0
     #endif
     @ObservationIgnored private var poller: Timer?
 
@@ -141,7 +144,12 @@ final class AppModel {
     private func record(_ keyCode: UInt16) {
         guard liveState.isCounting else { return }
         #if os(macOS)
-        let bundleID = SystemState.frontmostBundleID
+        let now = ProcessInfo.processInfo.systemUptime
+        if now - bundleIDSampledAt > 0.25 {
+            cachedBundleID = SystemState.frontmostBundleID
+            bundleIDSampledAt = now
+        }
+        let bundleID = cachedBundleID
         #else
         let bundleID = "unknown"
         #endif
@@ -150,16 +158,23 @@ final class AppModel {
 
     private func refreshLiveState() {
         #if os(macOS)
-        isTrusted = SystemState.isTrusted
+        let trusted = SystemState.isTrusted
         let secure = SystemState.isSecureInput
+        if cachedBundleID == "unknown" || ProcessInfo.processInfo.systemUptime - bundleIDSampledAt > 0.25 {
+            cachedBundleID = SystemState.frontmostBundleID
+            bundleIDSampledAt = ProcessInfo.processInfo.systemUptime
+        }
         #else
-        isTrusted = true
+        let trusted = true
         let secure = false
         #endif
-        liveState = CaptureState.resolved(trusted: isTrusted, paused: pausedByUser, secure: secure)
+        if isTrusted != trusted { isTrusted = trusted }
+        liveState = CaptureState.resolved(trusted: trusted, paused: pausedByUser, secure: secure)
         applyDisplay()
+        let nextMenu = store.snapshotTodayTotal()
+        if menuTotal != nextMenu { menuTotal = nextMenu }
         #if os(macOS)
-        if isTrusted {
+        if trusted {
             _ = tap.start()
         } else {
             tap.stop()
@@ -168,7 +183,8 @@ final class AppModel {
     }
 
     private func applyDisplay() {
-        captureState = demoOverride ?? liveState
+        let next = demoOverride ?? liveState
+        if captureState != next { captureState = next }
     }
 
     private func startPolling() {

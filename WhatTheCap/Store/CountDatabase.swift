@@ -18,6 +18,7 @@ final class CountDatabase {
     }
 
     private var db: OpaquePointer?
+    private var incrementStatement: OpaquePointer?
 
     init(path: String) throws {
         let flags = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX
@@ -37,25 +38,18 @@ final class CountDatabase {
             """)
         try exec("PRAGMA journal_mode=WAL")
         try exec("PRAGMA synchronous=NORMAL")
+        try prepareIncrement()
     }
 
     deinit {
+        sqlite3_finalize(incrementStatement)
         sqlite3_close(db)
     }
 
     func increment(day: String, hour: Int, keyCode: UInt16, bundleID: String, by count: Int = 1) throws {
-        guard count > 0 else { return }
-        let sql = """
-            INSERT INTO counts (day, hour, key_code, bundle_id, count)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(day, hour, key_code, bundle_id)
-            DO UPDATE SET count = count + excluded.count
-            """
-        var statement: OpaquePointer?
-        defer { sqlite3_finalize(statement) }
-        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw CountDatabaseError.exec(errmsg())
-        }
+        guard count > 0, let statement = incrementStatement else { return }
+        sqlite3_reset(statement)
+        sqlite3_clear_bindings(statement)
         sqlite3_bind_text(statement, 1, day, -1, SQLITE_TRANSIENT)
         sqlite3_bind_int(statement, 2, Int32(hour))
         sqlite3_bind_int(statement, 3, Int32(keyCode))
@@ -115,6 +109,18 @@ final class CountDatabase {
             names.append(String(cString: sqlite3_column_text(statement, 0)))
         }
         return names
+    }
+
+    private func prepareIncrement() throws {
+        let sql = """
+            INSERT INTO counts (day, hour, key_code, bundle_id, count)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(day, hour, key_code, bundle_id)
+            DO UPDATE SET count = count + excluded.count
+            """
+        guard sqlite3_prepare_v2(db, sql, -1, &incrementStatement, nil) == SQLITE_OK else {
+            throw CountDatabaseError.exec(errmsg())
+        }
     }
 
     private func exec(_ sql: String) throws {

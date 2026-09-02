@@ -95,6 +95,7 @@ final class EventTap {
         return !old.contains(flag) && new.contains(flag)
     }
 }
+
 private func eventTapCallback(
     _ proxy: CGEventTapProxy,
     type: CGEventType,

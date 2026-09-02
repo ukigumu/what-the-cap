@@ -24,6 +24,7 @@ final class PersistentStore: KeystrokeStore {
     private let queue = DispatchQueue(label: "software.grumpy.whatthecap.store")
     private var buckets: [String: DayBucket] = [:]
     private let dayFormatter: DateFormatter
+    private var publishScheduled = false
 
     private(set) var todayTotal = 0
     private(set) var hasData = false
@@ -114,6 +115,12 @@ final class PersistentStore: KeystrokeStore {
         }
     }
 
+    /// Reads the live total without touching `@Observable` fields, so the
+    /// menu bar can sample it without rebuilding Control Center.
+    func snapshotTodayTotal() -> Int {
+        queue.sync { buckets[dayKey(for: 0)]?.total ?? 0 }
+    }
+
     func record(_ event: KeyDown) {
         queue.async { [weak self] in
             self?.increment(event, by: 1)
@@ -162,11 +169,27 @@ final class PersistentStore: KeystrokeStore {
     }
 
     private func increment(_ event: KeyDown, by count: Int, publishAfter: Bool = true) {
+        let wasEmpty = !buckets.contains { $0.value.total > 0 }
         let day = dayFormatter.string(from: calendar.startOfDay(for: event.at))
         let hour = calendar.component(.hour, from: event.at)
         try? database.increment(day: day, hour: hour, keyCode: event.keyCode, bundleID: event.bundleID, by: count)
         apply(day: day, hour: hour, keyCode: event.keyCode, bundleID: event.bundleID, count: count)
-        if publishAfter { publish() }
+        guard publishAfter else { return }
+        if wasEmpty {
+            publish()
+        } else {
+            schedulePublish()
+        }
+    }
+
+    private func schedulePublish() {
+        if publishScheduled { return }
+        publishScheduled = true
+        queue.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            guard let self else { return }
+            self.publishScheduled = false
+            self.publish()
+        }
     }
 
     private func apply(day: String, hour: Int, keyCode: UInt16, bundleID: String, count: Int) {
@@ -184,8 +207,8 @@ final class PersistentStore: KeystrokeStore {
         let total = buckets[dayKey(for: 0)]?.total ?? 0
         let any = buckets.contains { $0.value.total > 0 }
         let apply = {
-            self.todayTotal = total
-            self.hasData = any
+            if self.todayTotal != total { self.todayTotal = total }
+            if self.hasData != any { self.hasData = any }
             self.revision += 1
         }
         if Thread.isMainThread {

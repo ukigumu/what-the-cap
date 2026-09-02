@@ -29,7 +29,6 @@ struct AppsView: View {
                     VStack(spacing: 0) {
                         ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
                             AppRow(rank: index + 1, app: app, peak: peak, total: total)
-                                .reveal(index)
                             if index < apps.count - 1 {
                                 Hairline()
                             }
@@ -42,7 +41,7 @@ struct AppsView: View {
                     Image(systemName: "hand.raised.fill")
                         .font(.system(size: 10))
                         .foregroundStyle(Theme.inkFaint)
-                    Text("WTC stores the bundle identifier and a count. Never window titles, documents, or text.")
+                    Text("The list shows the app name. WTC stores the bundle identifier and a count. Never window titles, documents, or text.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.inkFaint)
                 }
@@ -68,8 +67,8 @@ struct AppRow: View {
 
             VStack(alignment: .leading, spacing: 7) {
                 HStack {
-                    Text(app.bundleID)
-                        .font(Theme.mono)
+                    Text(AppDisplayName.resolve(app.bundleID))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Theme.ink)
                     Spacer()
                     Text(app.count.grouped)
